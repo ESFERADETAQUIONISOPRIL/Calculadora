@@ -1,0 +1,257 @@
+
+class SistemaNotas {
+    constructor() {
+        this.estudiantes = [];
+        this.porcentajes = {
+            corte1: 30,
+            corte2: 30,
+            corte3: 40
+        };
+        this.init();
+    }
+
+    init() {
+        this.cargarDatos();
+        this.configurarEventListeners();
+    }
+
+    cargarDatos() {
+        const data = localStorage.getItem('sistemaNotas');
+        if (data) {
+            try {
+                const parsed = JSON.parse(data);
+                this.estudiantes = parsed.estudiantes || [];
+                this.porcentajes = parsed.porcentajes || this.porcentajes;
+            } catch (e) {
+                console.error('Error al cargar datos:', e);
+            }
+        }
+    }
+
+    guardarDatos() {
+        try {
+            localStorage.setItem('sistemaNotas', JSON.stringify({
+                estudiantes: this.estudiantes,
+                porcentajes: this.porcentajes
+            }));
+        } catch (e) {
+            console.error('Error al guardar datos:', e);
+        }
+    }
+
+    configurarEventListeners() {
+        // Navegación entre secciones
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = e.target.dataset.section;
+                this.mostrarSeccion(section);
+            });
+        });
+
+        // Formulario de porcentajes
+        document.getElementById('form-porcentajes').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.porcentajes.corte1 = parseInt(document.getElementById('corte1').value);
+            this.porcentajes.corte2 = parseInt(document.getElementById('corte2').value);
+            this.porcentajes.corte3 = parseInt(document.getElementById('corte3').value);
+            this.guardarDatos();
+            this.mostrarToast('Porcentajes guardados', 'success');
+        });
+
+        // Agregar estudiante
+        document.getElementById('btn-agregar-estudiante').addEventListener('click', () => {
+            this.mostrarModalEstudiante();
+        });
+
+        // Formulario de estudiante
+        document.getElementById('form-estudiante').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.guardarEstudiante();
+        });
+
+        document.getElementById('btn-cancelar').addEventListener('click', () => {
+            this.ocultarModal();
+        });
+    }
+
+    calcularDefinitiva(estudiante) {
+        let definitiva = 0;
+        let completados = 0;
+        if (estudiante.corte1 !== null) {
+            definitiva += estudiante.corte1 * (this.porcentajes.corte1 / 100);
+            completados++;
+        }
+        if (estudiante.corte2 !== null) {
+            definitiva += estudiante.corte2 * (this.porcentajes.corte2 / 100);
+            completados++;
+        }
+        if (estudiante.corte3 !== null) {
+            definitiva += estudiante.corte3 * (this.porcentajes.corte3 / 100);
+            completados++;
+        }
+        return { definitiva: Math.round(definitiva * 100) / 100, completados };
+    }
+
+    calcularNotaNecesaria(estudiante, objetivoNota) {
+        const { definitiva: acumulado, completados } = this.calcularDefinitiva(estudiante);
+        if (completados === 3) return null;
+        const faltantes = [];
+        if (estudiante.corte1 === null) faltantes.push('corte1');
+        if (estudiante.corte2 === null) faltantes.push('corte2');
+        if (estudiante.corte3 === null) faltantes.push('corte3');
+        if (faltantes.length === 0) return null;
+        const porcentajeRestante = this.porcentajes[faltantes[faltantes.length - 1]] / 100;
+        const restante = (objetivoNota - acumulado) / porcentajeRestante;
+        if (restante < 0 || restante > 5.0) return null;
+        return Math.round(restante * 100) / 100;
+    }
+
+    validarNota(valor) {
+        const num = parseFloat(valor);
+        if (isNaN(num) || num < 0 || num > 5.0) return null;
+        return Math.round(num * 100) / 100;
+    }
+
+    validarDatosEstudiante(nombre, codigo, id) {
+        if (!nombre || nombre.trim().length < 2) return false;
+        if (!codigo || codigo.trim().length < 1) return false;
+        if (this.estudiantes.some(e => e.id !== id && e.codigo === codigo)) return false;
+        return true;
+    }
+
+    renderizarEstudiantes() {
+        const grid = document.getElementById('estudiantes-grid');
+        grid.innerHTML = '';
+
+        this.estudiantes.forEach(estudiante => {
+            const { definitiva, completados } = this.calcularDefinitiva(estudiante);
+            const estado = definitiva >= 3 ? 'success' : definitiva >= 2 ? 'warning' : 'danger';
+
+            const card = document.createElement('div');
+            card.className = 'estudiante-card';
+            card.style.borderLeftColor = `var(--color-${estado})`;
+
+            card.innerHTML = `
+                <h3>${estudiante.nombre}</h3>
+                <p>Código: ${estudiante.codigo}</p>
+                <p>Corte 1: ${estudiante.corte1 || 'N/A'}</p>
+                <p>Corte 2: ${estudiante.corte2 || 'N/A'}</p>
+                <p>Corte 3: ${estudiante.corte3 || 'N/A'}</p>
+                <p>Definitiva: ${definitiva} (${completados}/3 cortes)</p>
+                <button class="btn" onclick="sistema.editarEstudiante('${estudiante.id}')">Editar</button>
+                <button class="btn" onclick="sistema.eliminarEstudiante('${estudiante.id}')">Eliminar</button>
+                <button class="btn" onclick="sistema.calcularNotaNecesariaPrompt('${estudiante.id}')">Calcular Nota Necesaria</button>
+            `;
+
+            grid.appendChild(card);
+        });
+    }
+
+    mostrarToast(mensaje, tipo) {
+        const toast = document.getElementById('toast');
+        toast.textContent = mensaje;
+        toast.className = `toast ${tipo}`;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    mostrarSeccion(seccion) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+        document.getElementById(seccion).classList.add('active');
+        document.querySelector(`[data-section="${seccion}"]`).classList.add('active');
+    }
+
+    mostrarModalEstudiante(estudiante = null) {
+        const modal = document.getElementById('modal-estudiante');
+        const form = document.getElementById('form-estudiante');
+        const title = document.getElementById('modal-title');
+
+        if (estudiante) {
+            title.textContent = 'Editar Estudiante';
+            document.getElementById('estudiante-id').value = estudiante.id;
+            document.getElementById('estudiante-nombre').value = estudiante.nombre;
+            document.getElementById('estudiante-codigo').value = estudiante.codigo;
+            document.getElementById('estudiante-corte1').value = estudiante.corte1 || '';
+            document.getElementById('estudiante-corte2').value = estudiante.corte2 || '';
+            document.getElementById('estudiante-corte3').value = estudiante.corte3 || '';
+        } else {
+            title.textContent = 'Agregar Estudiante';
+            form.reset();
+            document.getElementById('estudiante-id').value = '';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    ocultarModal() {
+        document.getElementById('modal-estudiante').style.display = 'none';
+    }
+
+    guardarEstudiante() {
+        const id = document.getElementById('estudiante-id').value || Date.now().toString();
+        const nombre = document.getElementById('estudiante-nombre').value.trim();
+        const codigo = document.getElementById('estudiante-codigo').value.trim();
+        const corte1 = this.validarNota(document.getElementById('estudiante-corte1').value);
+        const corte2 = this.validarNota(document.getElementById('estudiante-corte2').value);
+        const corte3 = this.validarNota(document.getElementById('estudiante-corte3').value);
+
+        if (!this.validarDatosEstudiante(nombre, codigo, id)) {
+            this.mostrarToast('Datos inválidos o código duplicado', 'error');
+            return;
+        }
+
+        const estudiante = { id, nombre, codigo, corte1, corte2, corte3 };
+        const index = this.estudiantes.findIndex(e => e.id === id);
+        if (index >= 0) {
+            this.estudiantes[index] = estudiante;
+        } else {
+            this.estudiantes.push(estudiante);
+        }
+
+        this.guardarDatos();
+        this.renderizarEstudiantes();
+        this.ocultarModal();
+        this.mostrarToast('Estudiante guardado', 'success');
+    }
+
+    editarEstudiante(id) {
+        const estudiante = this.estudiantes.find(e => e.id === id);
+        if (estudiante) {
+            this.mostrarModalEstudiante(estudiante);
+        }
+    }
+
+    eliminarEstudiante(id) {
+        this.estudiantes = this.estudiantes.filter(e => e.id !== id);
+        this.guardarDatos();
+        this.renderizarEstudiantes();
+        this.mostrarToast('Estudiante eliminado', 'warning');
+    }
+
+    calcularNotaNecesariaPrompt(id) {
+        const estudiante = this.estudiantes.find(e => e.id === id);
+        if (!estudiante) return;
+
+        const objetivo = prompt('Ingrese la nota objetivo (0-5):');
+        const objNum = parseFloat(objetivo);
+        if (isNaN(objNum) || objNum < 0 || objNum > 5) {
+            this.mostrarToast('Nota objetivo inválida', 'error');
+            return;
+        }
+
+        const nota = this.calcularNotaNecesaria(estudiante, objNum);
+        if (nota === null) {
+            this.mostrarToast('No se puede calcular (ya completado o inalcanzable)', 'warning');
+        } else {
+            this.mostrarToast(`Nota necesaria: ${nota}`, 'info');
+        }
+    }
+}
+
+// Instanciar el sistema
+const sistema = new SistemaNotas();
+

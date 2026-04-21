@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Notas de Estudiantes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="nav-menu">
+            <a href="#estudiantes" class="active" data-section="estudiantes">Estudiantes</a>
+            <a href="#configuracion" data-section="configuracion">Configuración</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="estudiantes" class="section active">
+            <h1>Gestión de Estudiantes</h1>
+            <button class="btn" id="btn-agregar-estudiante">Agregar Estudiante</button>
+            <div class="estudiantes-grid" id="estudiantes-grid">
+                <!-- Los estudiantes se renderizarán aquí -->
+            </div>
+        </section>
+
+        <section id="configuracion" class="section">
+            <h1>Configuración de Porcentajes</h1>
+            <form id="form-porcentajes">
+                <label for="corte1">Corte 1 (%):</label>
+                <input type="number" id="corte1" min="0" max="100" value="30">
+                <label for="corte2">Corte 2 (%):</label>
+                <input type="number" id="corte2" min="0" max="100" value="30">
+                <label for="corte3">Corte 3 (%):</label>
+                <input type="number" id="corte3" min="0" max="100" value="40">
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Modal para agregar/editar estudiante -->
+    <div id="modal-estudiante" class="modal-backdrop" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title">Agregar Estudiante</h2>
+            <form id="form-estudiante">
+                <input type="hidden" id="estudiante-id">
+                <label for="estudiante-nombre">Nombre:</label>
+                <input type="text" id="estudiante-nombre" required>
+                <label for="estudiante-codigo">Código:</label>
+                <input type="text" id="estudiante-codigo" required>
+                <label for="estudiante-corte1">Corte 1:</label>
+                <input type="number" id="estudiante-corte1" min="0" max="5" step="0.01">
+                <label for="estudiante-corte2">Corte 2:</label>
+                <input type="number" id="estudiante-corte2" min="0" max="5" step="0.01">
+                <label for="estudiante-corte3">Corte 3:</label>
+                <input type="number" id="estudiante-corte3" min="0" max="5" step="0.01">
+                <button type="submit" class="btn">Guardar</button>
+                <button type="button" class="btn" id="btn-cancelar">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast para mensajes -->
+    <div id="toast" class="toast" style="display: none;"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
