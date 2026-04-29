@@ -7,10 +7,12 @@ class SistemaNotas {
             corte2: 30,
             corte3: 40
         };
+        this.filtro = '';
         // Cache DOM elements
         this.navLinks = document.querySelectorAll('.nav-menu a');
         this.formPorcentajes = document.getElementById('form-porcentajes');
         this.btnAgregarEstudiante = document.getElementById('btn-agregar-estudiante');
+        this.searchInput = document.getElementById('search-estudiantes');
         this.formEstudiante = document.getElementById('form-estudiante');
         this.btnCancelar = document.getElementById('btn-cancelar');
         this.modalEstudiante = document.getElementById('modal-estudiante');
@@ -74,6 +76,12 @@ class SistemaNotas {
             this.mostrarModalEstudiante();
         });
 
+        // Buscador de estudiantes
+        this.searchInput.addEventListener('input', (e) => {
+            this.filtro = e.target.value.trim().toLowerCase();
+            this.renderizarEstudiantes();
+        });
+
         // Formulario de estudiante
         this.formEstudiante.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -133,7 +141,18 @@ class SistemaNotas {
     renderizarEstudiantes() {
         this.estudiantesGrid.innerHTML = '';
 
-        this.estudiantes.forEach(estudiante => {
+        const estudiantesFiltrados = this.estudiantes.filter(estudiante => {
+            if (!this.filtro) return true;
+            return estudiante.nombre.toLowerCase().includes(this.filtro)
+                || estudiante.codigo.toLowerCase().includes(this.filtro);
+        });
+
+        if (estudiantesFiltrados.length === 0) {
+            this.estudiantesGrid.innerHTML = '<p class="sin-resultados">No se encontraron estudiantes con la búsqueda.</p>';
+            return;
+        }
+
+        estudiantesFiltrados.forEach(estudiante => {
             const { definitiva, completados } = this.calcularDefinitiva(estudiante);
             const estado = definitiva >= 3 ? 'success' : definitiva >= 2 ? 'warning' : 'danger';
 
