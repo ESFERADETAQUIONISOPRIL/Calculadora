@@ -24,9 +24,10 @@ body {
 /* Estilos básicos para estudiantes */
 .estudiantes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1rem;
     padding: 1rem;
+    align-items: start;
 }
 
 .estudiante-card {
@@ -36,6 +37,9 @@ body {
     box-shadow: var(--box-shadow);
     padding: 1rem;
     transition: box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .estudiante-card:hover {
