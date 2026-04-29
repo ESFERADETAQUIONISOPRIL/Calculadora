@@ -160,48 +160,63 @@ class SistemaNotas {
             card.className = 'estudiante-card';
             card.style.borderLeftColor = `var(--color-${estado})`;
 
-            const h3 = document.createElement('h3');
-            h3.textContent = estudiante.nombre;
-            card.appendChild(h3);
+            const header = document.createElement('div');
+            header.className = 'card-header';
 
-            const pCodigo = document.createElement('p');
-            pCodigo.textContent = `Código: ${estudiante.codigo}`;
-            card.appendChild(pCodigo);
+            const nombre = document.createElement('h3');
+            nombre.textContent = estudiante.nombre;
+            header.appendChild(nombre);
+
+            const codigo = document.createElement('span');
+            codigo.className = 'codigo';
+            codigo.textContent = estudiante.codigo;
+            header.appendChild(codigo);
+
+            card.appendChild(header);
+
+            const notasGrid = document.createElement('div');
+            notasGrid.className = 'notas-grid';
 
             const pCorte1 = document.createElement('p');
-            pCorte1.textContent = `Corte 1: ${estudiante.corte1 || 'N/A'}`;
-            card.appendChild(pCorte1);
+            pCorte1.innerHTML = '<strong>Corte 1</strong><br>' + (estudiante.corte1 || 'N/A');
+            notasGrid.appendChild(pCorte1);
 
             const pCorte2 = document.createElement('p');
-            pCorte2.textContent = `Corte 2: ${estudiante.corte2 || 'N/A'}`;
-            card.appendChild(pCorte2);
+            pCorte2.innerHTML = '<strong>Corte 2</strong><br>' + (estudiante.corte2 || 'N/A');
+            notasGrid.appendChild(pCorte2);
 
             const pCorte3 = document.createElement('p');
-            pCorte3.textContent = `Corte 3: ${estudiante.corte3 || 'N/A'}`;
-            card.appendChild(pCorte3);
+            pCorte3.innerHTML = '<strong>Corte 3</strong><br>' + (estudiante.corte3 || 'N/A');
+            notasGrid.appendChild(pCorte3);
 
             const pDefinitiva = document.createElement('p');
-            pDefinitiva.textContent = `Definitiva: ${definitiva} (${completados}/3 cortes)`;
-            card.appendChild(pDefinitiva);
+            pDefinitiva.innerHTML = '<strong>Definitiva</strong><br>' + `${definitiva} (${completados}/3)`;
+            notasGrid.appendChild(pDefinitiva);
+
+            card.appendChild(notasGrid);
+
+            const actions = document.createElement('div');
+            actions.className = 'card-actions';
 
             const btnEditar = document.createElement('button');
             btnEditar.className = 'btn';
             btnEditar.textContent = 'Editar';
             btnEditar.addEventListener('click', () => this.editarEstudiante(estudiante.id));
-            card.appendChild(btnEditar);
+            actions.appendChild(btnEditar);
 
             const btnEliminar = document.createElement('button');
             btnEliminar.className = 'btn';
             btnEliminar.textContent = 'Eliminar';
             btnEliminar.addEventListener('click', () => this.eliminarEstudiante(estudiante.id));
-            card.appendChild(btnEliminar);
+            actions.appendChild(btnEliminar);
 
             const btnCalcular = document.createElement('button');
             btnCalcular.className = 'btn';
             btnCalcular.textContent = 'Calcular Nota Necesaria';
             btnCalcular.addEventListener('click', () => this.calcularNotaNecesariaPrompt(estudiante.id));
-            card.appendChild(btnCalcular);
+            actions.appendChild(btnCalcular);
 
+            card.appendChild(actions);
             this.estudiantesGrid.appendChild(card);
         });
     }
